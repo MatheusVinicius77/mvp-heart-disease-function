@@ -23,6 +23,3 @@ def predict(user_input):
     model_input = [list(user_input.values())]
     model_output = int(model.predict(model_input)[0])
     return {"diagnostic":model_output}
-
-
-print(predict(user_input1))
