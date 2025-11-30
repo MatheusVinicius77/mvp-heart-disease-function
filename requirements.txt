@@ -1,7 +1,4 @@
-fastapi
-uvicorn
-catboost
-xgboost
-scikit-learn
+streamlit
 pandas
+scikit-learn
 numpy
