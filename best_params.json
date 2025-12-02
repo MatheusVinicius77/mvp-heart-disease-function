@@ -1,0 +1,15 @@
+{
+  "catboost": {
+    "iterations": 283,
+    "depth": 4,
+    "learning_rate": 0.0022324283222608875,
+    "l2_leaf_reg": 0.11059793885873609,
+    "border_count": 144
+  },
+  "logistic_regression": {
+    "solver": "lbfgs",
+    "C": 0.03864347995546467
+  },
+  "catboost_best_acc": 0.8385,
+  "lr_best_acc": 0.8348333333333334
+}
