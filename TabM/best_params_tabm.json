@@ -1,0 +1,10 @@
+{
+    "n_blocks": 4,
+    "d_block": 400,
+    "lr": 0.003734983534434545,
+    "weight_decay": 0.009444825973414176,
+    "dropout": 0.0805118629883789,
+    "d_embedding": 32,
+    "n_bins": 23,
+    "use_embeddings": true
+}
