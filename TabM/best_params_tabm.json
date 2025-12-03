@@ -1,12 +1,12 @@
 {
-    "n_blocks": 4,
-    "d_block": 192,
-    "lr": 0.0029867522040174068,
-    "weight_decay": 0.031547452249743126,
-    "dropout": 0.3984275230250282,
-    "d_embedding": 8,
-    "n_bins": 58,
-    "smote_sampling_strategy": 0.8893846372682632,
+    "n_blocks": 2,
+    "d_block": 384,
+    "lr": 0.004005655611200343,
+    "weight_decay": 0.0030912898654750437,
+    "dropout": 0.06976094714529132,
+    "d_embedding": 28,
+    "n_bins": 17,
+    "smote_sampling_strategy": 0.9062149113605019,
     "use_embeddings": true,
     "use_smote": true
 }
