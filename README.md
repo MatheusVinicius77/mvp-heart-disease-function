@@ -1,10 +1,10 @@
-# 🏥 TabM para Diagnóstico de Doença Cardíaca: Exploração de Transformers em Dados Tabulares Clínicos
+# 🏥 TabM para Diagnóstico de Doença Cardíaca: Exploração de MLP Eficiente em Dados Tabulares Clínicos
 
 ## 📋 Resumo Executivo
 
-Este trabalho explora a aplicação de **TabM** (Transformer para Dados Tabulares) no diagnóstico de doença cardíaca coronariana usando o dataset Cleveland. TabM é uma arquitetura moderna que combina mecanismos de atenção com embeddings numéricos para capturar relações complexas em dados tabulares.
+Este trabalho explora a aplicação de **TabM** (Tabular Model) no diagnóstico de doença cardíaca coronariana usando o dataset Cleveland. Ao contrário do que o nome pode sugerir, TabM não é um Transformer, mas sim uma arquitetura baseada em **MLP (Multi-Layer Perceptron)** simples e eficiente, potencializada por **BatchEnsemble**.
 
-**Objetivo Principal**: Investigar a efetividade de TabM em diagnóstico de doença cardíaca, explorando como transformers podem capturar relações entre features clínicas em dados tabulares médicos.
+**Objetivo Principal**: Investigar a efetividade de TabM em diagnóstico de doença cardíaca, explorando como uma arquitetura feedforward simples pode superar modelos complexos baseados em atenção.
 
 **Diferencial**: Primeira aplicação de TabM em contexto de diagnóstico cardíaco - gap na literatura.
 
@@ -18,23 +18,23 @@ Este trabalho explora a aplicação de **TabM** (Transformer para Dados Tabulare
 
 ### Contexto
 
-- Transformers revolucionam IA, mas são pouco explorados em dados tabulares médicos
-- TabM é uma arquitetura recente (2021) com poucos estudos em medicina
+- Modelos baseados em atenção (Transformers) são populares, mas complexos e computacionalmente custosos (complexidade quadrática).
+- **TabM** surge como uma alternativa simples baseada em MLP que supera modelos de atenção como FT-Transformer.
 - Dataset Cleveland: 297 pacientes (160 saudáveis, 137 doentes)
 - Alguns folds apresentam alta taxa de erro (até 30%)
 
 ### Gap na Literatura
 
 - **Nenhum estudo anterior aplicou TabM em diagnóstico de doença cardíaca**
-- Falta de benchmarks de transformers em dados médicos tabulares
+- Falta de benchmarks de arquiteturas modernas de MLP em dados médicos tabulares
 - Necessidade de validação em contextos clínicos reais
 
 ### Desafios
 
-- Dataset pequeno (297 amostras) - TabM foi desenvolvido para datasets maiores
+- Dataset pequeno (297 amostras)
 - Desbalanceamento de classes (54% vs 46%)
 - Variabilidade entre folds - alguns com distribuição atípica
-- Necessidade de capturar relações complexas entre features clínicas
+- Necessidade de capturar relações complexas entre features clínicas de forma eficiente
 
 ### Hipóteses (Benchmarking Descritivo)
 
@@ -65,21 +65,26 @@ Seleção cuidadosa de features clínicas relevantes:
 
 ### 1. Arquitetura TabM
 
-TabM combina múltiplas técnicas para dados tabulares:
+TabM é descrita pelos autores como **"a simple feed-forward MLP-based model"** que combina a simplicidade de MLPs com a eficiência de ensembles.
 
-**Componentes Principais**:
+**Principais Características**:
 
-- **Embeddings Numéricos**: PiecewiseLinearEmbeddings para features numéricas
-- **Mecanismo de Atenção**: Multi-head attention para capturar relações entre features
-- **Blocos Transformer**: Múltiplos blocos para aprender representações hierárquicas
-- **Ensemble**: k modelos independentes para robustez
+- **MLP Simples**: Baseado em redes neurais feedforward tradicionais, evitando a complexidade quadrática dos Transformers.
+- **BatchEnsemble**: Técnica que permite treinar múltiplos "membros" do ensemble simultaneamente de forma eficiente.
+- **PiecewiseLinearEmbeddings**: Técnica de embedding para features numéricas.
+
+**Por que TabM?**
+
+1.  **Supera modelos com atenção**: "MLP coupled with BatchEnsemble [...] right away outperforms popular attention-based models, such as FT-Transformer".
+2.  **Eficiência Computacional**: "Compared to attention-based models, TabM does not suffer from quadratic computational complexity".
+3.  **Simplicidade**: Arquitetura feedforward direta, fácil de implementar e ajustar.
 
 **Hiperparâmetros Chave**:
 
-- `n_blocks`: Número de blocos transformer (1-4)
-- `d_block`: Dimensionalidade de cada bloco (64-512)
-- `d_embedding`: Dimensionalidade dos embeddings numéricos (8-32)
-- `n_bins`: Número de bins para discretização (2-64)
+- `n_blocks`: Número de camadas/blocos residuais.
+- `d_block`: Largura da camada (neurônios).
+- `d_embedding`: Dimensionalidade dos embeddings.
+- `dropout`: Regularização.
 
 ### 2. SMOTE Híbrido (Técnica Complementar)
 
@@ -136,13 +141,13 @@ Input (1 numérica + 5 categóricas)
     ↓
 PiecewiseLinearEmbeddings (features numéricas)
     ↓
-TabM Blocks (múltiplos blocos transformer)
+TabM Blocks (MLP + BatchEnsemble)
     ↓
-Multi-Head Attention (captura relações entre features)
+Camadas Densas (Feed-Forward)
     ↓
 Dropout (regularização)
     ↓
-Output (probabilidade de doença)
+Output (probabilidade de doença - Ensemble Mean)
 ```
 
 ### Hiperparâmetros Otimizados (Optuna)
@@ -233,13 +238,44 @@ SMOTE: Gerando 23 amostras sintéticas
    - Análise: Performance com/sem SMOTE
    - Métricas: Recall (minimizar falsos negativos), Precision
 
-4. **"Como o mecanismo de atenção do TabM captura relações entre features clínicas?"**
-   - Análise: Visualização de attention weights
-   - Métrica: Correlação com importância clínica esperada
+4. **"O TabM com BatchEnsemble supera modelos de árvore de decisão (XGBoost/RandomForest)?"**
+   - Análise: Comparação de métricas
+   - Métrica: Acurácia e AUC-ROC comparativa
 
 ---
 
-## 🔧 Como Executar
+## � Interface Web (Streamlit)
+
+Este projeto inclui uma interface web interativa para realizar diagnósticos em tempo real usando o modelo treinado.
+
+### Como Rodar
+
+1. **Instale as dependências**:
+
+   ```bash
+   pip install streamlit
+   ```
+
+2. **Execute o aplicativo**:
+
+   ```bash
+   streamlit run app.py
+   ```
+
+3. **Acesse no navegador**:
+   - Local: `http://localhost:8501`
+   - Network: Endereço IP mostrado no terminal
+
+### Funcionalidades
+
+- **Input Interativo**: Formulário para inserir dados do paciente (Oldpeak, Dor no peito, etc.)
+- **Diagnóstico em Tempo Real**: Cálculo de probabilidade de doença cardíaca
+- **Interpretação**: Níveis de risco (Baixo, Moderado, Alto) e recomendações
+- **Visualização**: Barra de progresso de risco
+
+---
+
+## �🔧 Como Executar
 
 ### Pré-requisitos
 
