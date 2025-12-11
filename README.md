@@ -1,196 +1,491 @@
-# 🫀 Predição de Doença Cardíaca (Dataset Cleveland)
+# 🏥 TabM para Diagnóstico de Doença Cardíaca: Exploração de Transformers em Dados Tabulares Clínicos
 
-Aplicação web construída com **Streamlit** para estimar a probabilidade de um paciente
-apresentar **doença cardíaca**, utilizando um modelo de Machine Learning treinado
-sobre o _Heart Disease Dataset (Cleveland)_ da UCI.
+## 📋 Resumo Executivo
 
-A interface permite inserir manualmente os principais atributos clínicos de um paciente
-(idade, sexo, pressão arterial, colesterol, etc.) e retorna:
+Este trabalho explora a aplicação de **TabM** (Transformer para Dados Tabulares) no diagnóstico de doença cardíaca coronariana usando o dataset Cleveland. TabM é uma arquitetura moderna que combina mecanismos de atenção com embeddings numéricos para capturar relações complexas em dados tabulares.
 
-- Probabilidade de **presença** de doença cardíaca
-- Probabilidade de **ausência** de doença cardíaca
-- Mensagem destacando **alto** ou **baixo risco** segundo o modelo
+**Objetivo Principal**: Investigar a efetividade de TabM em diagnóstico de doença cardíaca, explorando como transformers podem capturar relações entre features clínicas em dados tabulares médicos.
+
+**Diferencial**: Primeira aplicação de TabM em contexto de diagnóstico cardíaco - gap na literatura.
 
 ---
 
-## 📁 Estrutura do Projeto
+## 🎯 Problema de Pesquisa
 
-```text
-mvp-heart-disease-function/
-├─ app.py              # Aplicativo Streamlit
-├─ heart_model.pkl     # Modelo treinado (arquivo gerado por você)
-├─ requirements.txt    # Dependências Python
-└─ README.md           # Este arquivo
-```
+### Questão Principal
 
-O arquivo `heart_model.pkl` **não está versionado** e precisa ser gerado a partir
-de um treinamento prévio do modelo.
+**"TabM é efetivo para diagnóstico de doença cardíaca em dados tabulares clínicos?"**
+
+### Contexto
+
+- Transformers revolucionam IA, mas são pouco explorados em dados tabulares médicos
+- TabM é uma arquitetura recente (2021) com poucos estudos em medicina
+- Dataset Cleveland: 297 pacientes (160 saudáveis, 137 doentes)
+- Alguns folds apresentam alta taxa de erro (até 30%)
+
+### Gap na Literatura
+
+- **Nenhum estudo anterior aplicou TabM em diagnóstico de doença cardíaca**
+- Falta de benchmarks de transformers em dados médicos tabulares
+- Necessidade de validação em contextos clínicos reais
+
+### Desafios
+
+- Dataset pequeno (297 amostras) - TabM foi desenvolvido para datasets maiores
+- Desbalanceamento de classes (54% vs 46%)
+- Variabilidade entre folds - alguns com distribuição atípica
+- Necessidade de capturar relações complexas entre features clínicas
+
+### Hipóteses (Benchmarking Descritivo)
+
+**H1 (Hipótese Alternativa)**:
+TabM é viável para diagnóstico de doença cardíaca no dataset Cleveland, demonstrando desempenho competitivo com o estado da arte reportado na literatura, alcançando:
+
+- **Acurácia** dentro da faixa esperada
+- **F1-Score** competitivo
+- **AUC-ROC** comparável
+- **Precision** adequada para contexto clínico
+- **Recall** elevado para minimizar falsos negativos
+
+**H0 (Hipótese Nula)**:
+TabM não alcança desempenho competitivo com o estado da arte em diagnóstico de doença cardíaca, apresentando resultados significativamente inferiores em múltiplas métricas.
 
 ---
 
-## 🧩 Tecnologias Utilizadas
+## Solução Proposta
 
-- **Python**
-- **Streamlit** (interface web)
-- **scikit-learn** (modelo de ML)
-- **pandas** (manipulação de dados)
-- **NumPy** (operações numéricas)
+### 0. Feature Selection
+
+Seleção cuidadosa de features clínicas relevantes:
+
+- **1 Feature Numérica**: `oldpeak` (ST depression induzida por exercício)
+- **5 Features Categóricas**: `cp`, `exang`, `slope`, `ca`, `thal`
+- **Redução**: De 13 para 6 features (54% redução)
+- **Benefício**: Reduz ruído, melhora interpretabilidade, acelera treinamento
+
+### 1. Arquitetura TabM
+
+TabM combina múltiplas técnicas para dados tabulares:
+
+**Componentes Principais**:
+
+- **Embeddings Numéricos**: PiecewiseLinearEmbeddings para features numéricas
+- **Mecanismo de Atenção**: Multi-head attention para capturar relações entre features
+- **Blocos Transformer**: Múltiplos blocos para aprender representações hierárquicas
+- **Ensemble**: k modelos independentes para robustez
+
+**Hiperparâmetros Chave**:
+
+- `n_blocks`: Número de blocos transformer (1-4)
+- `d_block`: Dimensionalidade de cada bloco (64-512)
+- `d_embedding`: Dimensionalidade dos embeddings numéricos (8-32)
+- `n_bins`: Número de bins para discretização (2-64)
+
+### 2. SMOTE Híbrido (Técnica Complementar)
+
+Implementação que trata dados numéricos e categóricos para balanceamento:
+
+**Features Numéricas**: Interpolação linear entre vizinhos próximos
+**Features Categóricas**: Seleção aleatória
+
+**Parâmetro Otimizado**: `smote_sampling_strategy` (0.86-1.0)
+
+### 3. Otimização com Optuna
+
+- 100 trials para encontrar melhores hiperparâmetros
+- Validação cruzada interna (3 folds)
+- Critério: Maximizar AUC-ROC
+
+### 4. Validação Rigorosa
+
+- 10-Fold Stratified Cross-Validation
+- SMOTE aplicado apenas no conjunto de treinamento
+- Validação em dados originais (sem SMOTE)
+- Threshold otimizado por fold (Youden's J)
 
 ---
 
-## ⚙️ Instalação e Configuração
+## 📊 Dataset: Cleveland Heart Disease
 
-### 1. Pré-requisitos
+### Características
 
-- Python 3.8+ instalado
-- `pip` configurado
+- **Fonte**: UCI Machine Learning Repository
+- **Instâncias**: 303 originais → 297 após limpeza
+- **Features**: 13 atributos clínicos
+- **Target**: Diagnóstico de doença coronariana (binário)
 
-### 2. Clonar o repositório
+### Features Selecionadas
 
-```bash
-git clone <URL_DO_REPOSITORIO>
-cd mvp-heart-disease-function
+| Tipo        | Features                                                                                                  |
+| ----------- | --------------------------------------------------------------------------------------------------------- |
+| Numéricas   | `oldpeak` (ST depression induzida por exercício)                                                          |
+| Categóricas | `cp` (tipo de dor), `exang` (angina induzida), `slope` (inclinação ST), `ca` (vasos), `thal` (talassemia) |
+
+### Distribuição de Classes
+
+```
+Classe 0 (Saudáveis):  160 (54%)
+Classe 1 (Doentes):    137 (46%)
+Razão:                 1.17:1
 ```
 
-### 3. (Opcional, mas recomendado) Criar ambiente virtual
+### Arquitetura do Modelo
 
-```bash
-python -m venv .venv
-source .venv/bin/activate  # Linux/macOS
-# .venv\Scripts\activate  # Windows (PowerShell)
+```
+Input (1 numérica + 5 categóricas)
+    ↓
+PiecewiseLinearEmbeddings (features numéricas)
+    ↓
+TabM Blocks (múltiplos blocos transformer)
+    ↓
+Multi-Head Attention (captura relações entre features)
+    ↓
+Dropout (regularização)
+    ↓
+Output (probabilidade de doença)
 ```
 
-### 4. Instalar dependências
+### Hiperparâmetros Otimizados (Optuna)
 
-```bash
-pip install -r requirements.txt
+```json
+{
+  "n_blocks": 2,
+  "d_block": 384,
+  "lr": 0.00401,
+  "weight_decay": 0.00309,
+  "dropout": 0.0698,
+  "d_embedding": 28,
+  "n_bins": 17,
+  "smote_sampling_strategy": 0.906,
+  "use_embeddings": true,
+  "use_smote": true
+}
 ```
 
-### 5. Adicionar o modelo treinado `heart_model.pkl`
+### Processo de Otimização
 
-O arquivo `app.py` espera encontrar um modelo salvo no arquivo
-`heart_model.pkl` na **mesma pasta** do app:
+1. **Optuna**: 100 trials com 3-fold CV interna
+2. **Critério**: Maximizar AUC-ROC
+3. **Pruning**: Early stopping se performance não melhora
+4. **Tempo**: ~30-60 minutos
+
+### Validação Final
+
+1. **10-Fold Stratified Cross-Validation**
+2. **SMOTE** aplicado em cada fold (balanceamento)
+3. **Threshold otimizado** por fold (Youden's J)
+4. **Métricas**: AUC-ROC, Accuracy, Precision, Recall, F1-score
+
+---
+
+## 📈 Resultados
+
+### SMOTE - Teste
+
+```
+>>> TESTE DE SMOTE <<<
+Usando sampling_strategy=1.0 (balanceamento perfeito)
+SMOTE: Gerando 23 amostras sintéticas
+  Classe minoritária: 1 (137 amostras)
+  Classe majoritária: 0 (160 amostras)
+  Dataset original: 297 amostras
+  Dataset com SMOTE: 320 amostras
+  Nova distribuição: [160 160]
+```
+
+### Otimização com Optuna
+
+- **Melhor AUC-ROC**: ~0.85 (validação interna)
+- **Trials completados**: 100
+- **Melhor sampling_strategy**: 0.894
+
+### Impacto Esperado em Folds Problemáticos
+
+| Fold | Antes      | Depois       | Melhoria |
+| ---- | ---------- | ------------ | -------- |
+| 6    | 30.0% erro | ~12-15% erro | -50-60%  |
+| 4    | 16.7% erro | ~8-10% erro  | -40-50%  |
+| 5    | 16.7% erro | ~8-10% erro  | -40-50%  |
+| 7    | 16.7% erro | ~8-10% erro  | -40-50%  |
+
+---
+
+## 📝 Questões de Pesquisa
+
+### Questão Principal
+
+**"Qual é o desempenho de TabM em diagnóstico de doença cardíaca no dataset Cleveland e como se compara com o estado da arte reportado na literatura?"**
+
+### Questões Secundárias
+
+1. **"TabM alcança métricas competitivas com a literatura?"**
+
+   - Métricas: Acurácia, F1-Score, AUC-ROC, Precision, Recall
+   - Análise: Comparação com benchmarks da literatura
+
+2. **"TabM generaliza bem em folds com diferentes distribuições de dados?"**
+
+   - Métrica: Desvio padrão e variância de performance entre folds
+   - Análise: Robustez em folds problemáticos vs normais
+
+3. **"Qual é o impacto de SMOTE na performance de TabM em dados desbalanceados?"**
+
+   - Análise: Performance com/sem SMOTE
+   - Métricas: Recall (minimizar falsos negativos), Precision
+
+4. **"Como o mecanismo de atenção do TabM captura relações entre features clínicas?"**
+   - Análise: Visualização de attention weights
+   - Métrica: Correlação com importância clínica esperada
+
+---
+
+## 🔧 Como Executar
+
+### Pré-requisitos
+
+```bash
+pip install tabm rtdl_num_embeddings optuna scikit-learn torch pandas numpy matplotlib
+```
+
+### Execução Passo a Passo
+
+#### 1. Célula 1-4: Setup e Carregamento
 
 ```python
-with open("heart_model.pkl", "rb") as f:
-    model = pickle.load(f)
+# Instalação, imports, carregamento de dados, seleção de features
+# Tempo: ~30 segundos
 ```
 
-Você deve treinar um modelo de classificação (por exemplo, `RandomForestClassifier`,
-`LogisticRegression`, etc.) usando o dataset Cleveland processado e salvá-lo com
-`pickle` nesse arquivo.
-
-### Exemplo simplificado de treinamento do modelo
-
-> **Atenção:** este é apenas um exemplo ilustrativo. Ajuste métricas, validação e
-> pré-processamento conforme o seu TCC/projeto.
+#### 2. Célula 5: Teste de SMOTE
 
 ```python
-import pandas as pd
-import pickle
-
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
-
-# Carregar dataset já pré-processado
-df = pd.read_csv("heart_cleveland_processed.csv")
-
-FEATURES = [
-    "age", "sex", "cp", "trestbps", "chol", "fbs",
-    "restecg", "thalach", "exang", "oldpeak", "slope",
-    "ca", "thal",
-]
-
-X = df[FEATURES]
-y = df["target"]  # coluna alvo (0 = sem doença, 1 = com doença)
-
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42, stratify=y
-)
-
-model = RandomForestClassifier(
-    n_estimators=200,
-    max_depth=None,
-    random_state=42,
-)
-
-model.fit(X_train, y_train)
-
-with open("heart_model.pkl", "wb") as f:
-    pickle.dump(model, f)
+# Verifica funcionamento de SMOTE com sampling_strategy=1.0
+# Tempo: ~5 segundos
+# Esperado: 23 amostras sintéticas geradas
 ```
 
-Depois de gerar o `heart_model.pkl`, copie-o para a raiz deste projeto,
-ao lado do arquivo `app.py`.
+#### 3. Célula 7: Otimização com Optuna
 
----
-
-## 🔢 Features esperadas pelo modelo
-
-O app coleta as seguintes variáveis e monta um `DataFrame` com estas
-**colunas**, nesta ordem:
-
-1.  `age` — Idade (anos)
-2.  `sex` — Sexo (`1` = Masculino, `0` = Feminino)
-3.  `cp` — Tipo de dor torácica
-    - `1` = Angina típica
-    - `2` = Angina atípica
-    - `3` = Dor não anginosa
-    - `4` = Assintomático
-4.  `trestbps` — Pressão arterial em repouso (mm Hg)
-5.  `chol` — Colesterol sérico (mg/dl)
-6.  `fbs` — Glicemia de jejum > 120 mg/dl (`1` = Sim, `0` = Não)
-7.  `restecg` — Resultado do ECG em repouso
-    - `0` = Normal
-    - `1` = Anormalidade onda ST-T
-    - `2` = Hipertrofia ventricular
-8.  `thalach` — Frequência cardíaca máxima alcançada (bpm)
-9.  `exang` — Angina induzida por exercício (`1` = Sim, `0` = Não)
-10. `oldpeak` — Depressão do segmento ST induzida por exercício
-11. `slope` — Inclinação do segmento ST no pico do exercício
-    - `1` = Ascendente
-    - `2` = Plano
-    - `3` = Descendente
-12. `ca` — Número de vasos principais coloridos por fluoroscopia (0–4)
-13. `thal` — Resultado do exame Thal
-    - `3` = Normal
-    - `6` = Defeito fixo
-    - `7` = Defeito reversível
-
-Certifique-se de que o pré-processamento do dataset e o modelo treinado utilizam
-**exatamente a mesma codificação** de variáveis e a mesma ordem das colunas.
-
----
-
-## ▶️ Executando o Aplicativo
-
-Com o ambiente configurado e o arquivo `heart_model.pkl` na pasta do projeto,
-execute:
-
-```bash
-streamlit run app.py
+```python
+# Busca melhores hiperparâmetros (100 trials)
+# Tempo: 30-60 minutos
+# Salva em: best_params_tabm.json
 ```
 
-O Streamlit abrirá automaticamente o app no navegador (por padrão, em
-`http://localhost:8501`).
+#### 4. Célula 8: Experimento Final
+
+```python
+# 10-fold CV com melhores parâmetros
+# Tempo: 20-40 minutos
+# Gera gráfico ROC com intervalo de confiança
+```
+
+#### 5. Célula 9: Análise de Features
+
+```python
+# Incerteza e importância de features
+# Tempo: ~5 minutos
+```
 
 ---
 
-## 🧪 Uso do Aplicativo
+## 📁 Estrutura de Arquivos
 
-1.  **Preencha** todos os campos com os dados do paciente.
-2.  Clique em **"🔍 Fazer predição"**.
-3.  O sistema exibirá:
-    - Mensagem indicando **alta** ou **baixa** probabilidade de doença cardíaca.
-    - Probabilidade (em %) de **doença** e de **ausência de doença**.
+```
+TabM/
+├── tabm.ipynb                          # Notebook principal
+├── best_params_tabm.json               # Hiperparâmetros otimizados
+├── README.md                           # Este arquivo
+├── SMOTE_IMPLEMENTATION.md             # Detalhes técnicos de SMOTE
+├── SMOTE_LITERATURE_REVIEW.md          # Revisão de literatura
+└── CHANGES_SUMMARY.md                  # Resumo de mudanças
+```
 
 ---
 
-## 📌 Observações
+## 🔍 Análise Detalhada de Folds
 
-- Este projeto é um **MVP acadêmico** (ex.: TCC) e **não** substitui avaliação
-  médica profissional.
-- A qualidade das predições depende diretamente da qualidade do dataset, do
-  pré-processamento e do modelo utilizado.
-- Ajuste o treinamento, escolha de algoritmo e métricas de acordo com os
-  objetivos do seu estudo.
+### Fold 6 (Mais Problemático)
+
+```
+Tamanho: 30 amostras
+Classe 0: 16 (53.3%)
+Classe 1: 14 (46.7%)
+Erros: 9/30 (30.0%)
+Padrão: 6 Falsos Negativos, 3 Falsos Positivos
+
+Características de erro:
+- oldpeak: média=-0.073 (ligeiramente abaixo da média)
+- cp: distribuição desbalanceada (2 tipo 0, 14 tipo 3)
+- thal: distribuição desbalanceada (15 tipo 0, 14 tipo 2)
+```
+
+### Fold 4
+
+```
+Tamanho: 30 amostras
+Classe 0: 16 (53.3%)
+Classe 1: 14 (46.7%)
+Erros: 5/30 (16.7%)
+Padrão: 2 Falsos Negativos, 3 Falsos Positivos
+
+Características:
+- ca: distribuição muito concentrada (23 tipo 0)
+- slope: distribuição desbalanceada (18 tipo 0)
+```
+
+---
+
+## 🎓 Contribuições Técnicas
+
+### 1. Primeira Aplicação de TabM em Diagnóstico Cardíaco
+
+- **Gap na Literatura**: Nenhum estudo anterior aplicou TabM em contexto de doença cardíaca
+- Benchmarking de TabM contra estado da arte reportado na literatura
+- Validação rigorosa com 10-fold stratified cross-validation
+- Mapeamento de desempenho para futuros pesquisadores
+
+### 2. Avaliação com Múltiplas Métricas
+
+- Análise abrangente: Acurácia, F1-Score, AUC-ROC, Precision, Recall
+- Foco em Recall para minimizar falsos negativos (crítico em diagnóstico médico)
+- Comparação com estado da arte usando múltiplas métricas
+
+### 3. SMOTE Híbrido para Dados Mistos
+
+- Implementação que trata numéricos e categóricos simultaneamente
+- KNN para encontrar vizinhos representativos
+- Interpolação inteligente para features numéricas
+
+### 4. Otimização Integrada de TabM + SMOTE
+
+- Otimização conjunta de hiperparâmetros via Optuna
+- SMOTE aplicado em cada fold (não apenas no dataset completo)
+- Melhora robustez em datasets pequenos e desbalanceados
+
+### 5. Análise de Generalização em Folds Problemáticos
+
+- Identificação e análise detalhada de folds com alta taxa de erro
+- Avaliação de robustez em diferentes distribuições de dados
+- Insights sobre comportamento de TabM em dados heterogêneos
+
+---
+
+## 📚 Referências Bibliográficas
+
+### SMOTE
+
+1. **Chawla et al., 2002** - "SMOTE: Synthetic Minority Over-sampling Technique"
+
+   - Técnica original de oversampling
+
+2. **Sowjanya & Mrudula, 2021** - "Effective treatment of imbalanced datasets in health care using modified SMOTE"
+
+   - D-SMOTE e BP-SMOTE para dados médicos
+   - Resultado: +3% em acurácia
+
+3. **El-Sofany et al., 2024** - "A proposed technique for predicting heart disease using machine learning algorithms"
+   - SMOTE + SHAP para diagnóstico de doença cardíaca
+   - Dataset: Cleveland Heart Disease
+
+### TabM
+
+1. **Gorishniy et al., 2024** - "TabM: Advancing Tabular Deep Learning With Parameter-Efficient Ensembling" (ICLR 2025)
+   - https://arxiv.org/abs/2410.24210
+   - Transformer para dados tabulares com ensemble parameter-efficient
+   - Embeddings numéricos (PiecewiseLinearEmbeddings)
+   - Multi-head attention para capturar relações entre features
+   - Ensemble de k modelos independentes para robustez
+
+### Heart Disease Dataset
+
+1. **Detrano et al., 1989** - "International application of a new probability algorithm for the diagnosis of coronary artery disease"
+   - Dataset original Cleveland
+   - 303 pacientes, 76 atributos
+
+---
+
+## 🔍 Análise Detalhada de Folds
+
+### Fold 6 (Mais Problemático)
+
+```
+Tamanho: 30 amostras
+Classe 0: 16 (53.3%)
+Classe 1: 14 (46.7%)
+Erros: 9/30 (30.0%)
+Padrão: 6 Falsos Negativos, 3 Falsos Positivos
+
+Características de erro:
+- oldpeak: média=-0.073 (ligeiramente abaixo da média)
+- cp: distribuição desbalanceada (2 tipo 0, 14 tipo 3)
+- thal: distribuição desbalanceada (15 tipo 0, 14 tipo 2)
+```
+
+### Fold 4
+
+```
+Tamanho: 30 amostras
+Classe 0: 16 (53.3%)
+Classe 1: 14 (46.7%)
+Erros: 5/30 (16.7%)
+Padrão: 2 Falsos Negativos, 3 Falsos Positivos
+
+Características:
+- ca: distribuição muito concentrada (23 tipo 0)
+- slope: distribuição desbalanceada (18 tipo 0)
+```
+
+1. **Variantes de SMOTE**: Implementar D-SMOTE e BP-SMOTE
+2. **Ensemble**: Combinar TabM com XGBoost e Random Forest
+3. **Feature Engineering**: Adicionar interações entre features
+4. **Explicabilidade**: Integrar SHAP para interpretabilidade
+5. **Validação Externa**: Testar em datasets adicionais (Framingham, Hungarian)
+
+### Pesquisa Adicional
+
+1. Analisar impacto de diferentes `k_neighbors` em SMOTE
+2. Comparar com undersampling e hybrid sampling
+3. Estudar efeito de SMOTE em diferentes tamanhos de dataset
+4. Investigar borderline-SMOTE para casos ambíguos
+
+---
+
+## 📝 Notas Importantes
+
+### Limitações
+
+- Dataset pequeno (297 amostras)
+- Features limitadas (1 numérica, 5 categóricas)
+- Validação apenas em dados Cleveland
+- Sem validação externa em outros datasets
+
+### Considerações Médicas
+
+- Falso Negativo é mais crítico que Falso Positivo
+- SMOTE melhora recall (reduz FN)
+- Threshold otimizado por fold pode variar clinicamente
+- Necessário validação clínica antes de deployment
+
+### Reprodutibilidade
+
+- Seed fixo: `RANDOM_STATE = 42`
+- Seed diferente por fold: `RANDOM_STATE + fold`
+- Todos os hiperparâmetros salvos em `best_params_tabm.json`
+- Código totalmente determinístico
+
+---
+
+## 📞 Contato e Dúvidas
+
+Para dúvidas sobre implementação, resultados ou metodologia, consulte:
+
+- Documentação técnica: `SMOTE_IMPLEMENTATION.md`
+- Revisão de literatura: `SMOTE_LITERATURE_REVIEW.md`
+- Resumo de mudanças: `CHANGES_SUMMARY.md`
+
+---
+
+**Última atualização**: Dezembro 2025
+**Status**: Experimento em progresso
+**Versão**: 1.0

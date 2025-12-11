@@ -1,0 +1,12 @@
+{
+    "n_blocks": 2,
+    "d_block": 384,
+    "lr": 0.004005655611200343,
+    "weight_decay": 0.0030912898654750437,
+    "dropout": 0.06976094714529132,
+    "d_embedding": 28,
+    "n_bins": 17,
+    "smote_sampling_strategy": 0.9062149113605019,
+    "use_embeddings": true,
+    "use_smote": true
+}
