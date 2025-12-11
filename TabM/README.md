@@ -41,14 +41,14 @@ Este trabalho explora a aplicação de **TabM** (Transformer para Dados Tabulare
 **H1 (Hipótese Alternativa)**:
 TabM é viável para diagnóstico de doença cardíaca no dataset Cleveland, demonstrando desempenho competitivo com o estado da arte reportado na literatura, alcançando:
 
-- **Acurácia** dentro da faixa esperada (≥ 0.85)
-- **F1-Score** competitivo (≥ 0.82)
-- **AUC-ROC** comparável (≥ 0.85)
-- **Precision** adequada para contexto clínico (≥ 0.83)
-- **Recall** elevado para minimizar falsos negativos (≥ 0.85)
+- **Acurácia** dentro da faixa esperada
+- **F1-Score** competitivo
+- **AUC-ROC** comparável
+- **Precision** adequada para contexto clínico
+- **Recall** elevado para minimizar falsos negativos
 
 **H0 (Hipótese Nula)**:
-TabM não alcança desempenho competitivo com o estado da arte em diagnóstico de doença cardíaca, apresentando resultados significativamente inferiores em múltiplas métricas (Acurácia < 0.85, F1-Score < 0.82, AUC-ROC < 0.85, Precision < 0.83, Recall < 0.85).
+TabM não alcança desempenho competitivo com o estado da arte em diagnóstico de doença cardíaca, apresentando resultados significativamente inferiores em múltiplas métricas.
 
 ---
 
