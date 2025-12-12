@@ -55,7 +55,7 @@ def predict(model, oldpeak, cp, exang, slope, ca, thal):
 # Título e descrição
 st.title("🏥 Diagnóstico de Doença Cardíaca com TabM")
 st.markdown("""
-Este aplicativo utiliza um modelo **TabM** (Transformer para Dados Tabulares) treinado 
+Este aplicativo utiliza um modelo **TabM** treinado 
 no dataset Cleveland para auxiliar no diagnóstico de doença cardíaca coronariana.
 
 **NÃO** substitui avaliação médica profissional.
